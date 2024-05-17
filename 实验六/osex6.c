@@ -2,17 +2,20 @@
 #include <sys/types.h>
 #include <sys/msg.h>
 #include <sys/ipc.h>
-
+#include <stdlib.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <sys/shm.h>
 #define SHMKEY 75
 
 int shmid,i;
 int * addr;
 
-CLIENT()				
+int CLIENT()				
 {
 	int i;
-	shmid=shmget(SHMKEY,1024,0777);		/*获取共享区*/
-	addr=(int *)shmat(shmid,0,0);			/*共享区起始地址为addr*/
+	shmid=shmget(SHMKEY,1024,0777);		
+	addr=(int *)shmat(shmid,0,0);		
 	for(i=9;i>=0;i--)
 	{
 		while(*addr!=-1);
@@ -22,10 +25,10 @@ CLIENT()
 	exit(0);
 }
 
-SERVER()				
+int SERVER()				
 {
-	shmid=shmget(SHMKEY,1024,0777|IPC_CREAT);		/*创建共享区*/
-	addr=(int *)shmat(shmid,0,0);					/*共享区起始地址为addr*/
+	shmid=shmget(SHMKEY,1024,0777|IPC_CREAT);		
+	addr=(int *)shmat(shmid,0,0);					
 	do
 	{
 		*addr=-1;
@@ -36,14 +39,15 @@ SERVER()
 	exit(0);
 }
 
-main()
+int main()
 {
 	while((i=fork())==-1);
 	if(!i)
-		SERVER();		/*子进程server接收消息*/
+		SERVER();		
 	while((i=fork())==-1);
 	if(!i)
-		CLIENT();		/*子进程client发送消息*/
+		CLIENT();
 	wait(0);
 	wait(0);
+	return 0;
 }
