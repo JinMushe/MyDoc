@@ -1,98 +1,178 @@
 #include <stdio.h>
+
+#include<unistd.h>
+
+#include<time.h>
+
+#include<stdlib.h>
+
 struct pl_type
+
 {
-	int pn,pfn;
+
+int pn,pfn,time;
+
 };
 
 struct pfc_struct
+
 {
-	int pn,pfn;
-	struct pfc_struct * next;
+
+int pn,pfn;
+
+struct pfc_struct * next;
+
 };
 
-int s[320];					/*Ò³Ãæ·ÃÎÊĞòÁĞ*/
-struct pl_type pl[32];		/*Ò³ÃæÊı×é*/
-struct pfc_struct pfc[32];	/*ÓÃÀ´¹¹ÔìÖ¡¶ÓÁĞ*/
-struct pfc_struct * freepf_head,* busypf_head,* busypf_tail;
+int s[320];
+
+struct pl_type pl[32];
+
+struct pfc_struct pfc[32];
+
+struct pfc_struct * freepf_head;
 
 void initial(int pf);
-void fifo(int pf);
 
-main()
+void lru(int pf);
+
+int main()
+
 {
-	int i,total_pf;
 
-	srand(getpid());			/*¹¹ÔìÒ³Ãæ·ÃÎÊĞòÁĞ*/
-	for(i=0;i<320;i++)
-	{
-		s[i]=rand()%32;
-	}
+int i,total_pf;
 
-	for(total_pf=4;total_pf<=32;total_pf++)		/*Ö¡Êı´Ó4µ½32*/
-	{
-		initial(total_pf);		/*³õÊ¼»¯Ïà¹ØÊı¾İ½á¹¹*/
-		fifo(total_pf);			/*¼ÆËãFIFOµÄÃüÖĞÂÊ*/
-	}
+srand(getpid());
+
+for(i=0;i<320;i++)
+
+{
+
+s[i]=rand()%32;
+
+}
+
+for(total_pf=4;total_pf<=32;total_pf++)
+
+{
+
+initial(total_pf);
+
+lru(total_pf);
+
+}
+
+return 0;
+
 }
 
 void initial(int pf)
+
 {
-	int i;
 
-	for(i=0;i<32;i++)			/*³õÊ¼»¯Ò³ÃæÊı×é*/
-	{
-		pl[i].pn=i;
-		pl[i].pfn=-1;
-	}
+int i;
 
-	for(i=0;i<pf-1;i++)			/*³õÊ¼»¯Ö¡£¬²¢½«ËùÓĞÖ¡·ÅÈë¿ÕÏĞÖ¡¶ÓÁĞ£¬±»Õ¼ÓÃÖ¡¶ÓÁĞÎª¿Õ*/
-	{
-		pfc[i].pfn=i;
-		pfc[i].next=&pfc[i+1];
-	}
-	pfc[pf-1].pfn=pf-1;
-	pfc[pf-1].next=NULL;
+for(i=0;i<32;i++)
 
-	freepf_head=&pfc[0];
-	busypf_head=NULL;
-	busypf_tail=NULL;
+{
+
+pl[i].pn=i;
+
+pl[i].pfn=-1;
+
+pl[i].time=0;
+
 }
 
-void fifo(int pf)
+for(i=0;i<pf-1;i++)
+
 {
-	int i,diseffect=0;			/*diseffectÓÃÀ´¼ÇÂ¼Ò³ÃæÊ§Ğ§´ÎÊı*/
-	struct pfc_struct *p;
 
-	for(i=0;i<320;i++)				/*´¦ÀíÒ³Ãæ·ÃÎÊĞòÁĞ£¬¼ÆËãÊ§Ğ§Êı*/
-	{
-		if(pl[s[i]].pfn==-1)		/*±»·ÃÎÊÒ³Ãæ²»ÔÚÄÚ´æÖĞ£¬Ê§Ğ§Êı¼Ó1²¢½«Æäµ÷ÈëÄÚ´æ*/
-		{
-			diseffect+=1;			
+pfc[i].pfn=i;
 
-			if(freepf_head==NULL)		/*ÎŞ¿ÕÏĞÖ¡£¬Ôò´Ó±»Õ¼Ö¡¶ÓÁĞÖĞ°´FIFOÊÍ·ÅµÚÒ»¸ö±»Õ¼Ö¡£¬½«Æä¼ÓÈë¿ÕÏĞÖ¡¶ÓÁĞ*/
-			{
-				p=busypf_head->next;
-				pl[busypf_head->pn].pfn=-1;
-				freepf_head=busypf_head;
-				freepf_head->next=NULL;
-				busypf_head=p;
-			}
+pfc[i].next=&pfc[i+1];
 
-			p=freepf_head->next;		/*Îª´ıµ÷ÈëÒ³Ãæ·ÖÅäÒ»Ö¡£¬²¢½«¸ÃÖ¡¹Òµ½±»Õ¼Ö¡¶ÓÁĞ¶ÓÎ²*/
-			freepf_head->next=NULL;
-			freepf_head->pn=s[i];
-			pl[s[i]].pfn=freepf_head->pfn;
-
-			if(busypf_tail==NULL)
-				busypf_head=busypf_tail=freepf_head;
-			else
-			{
-				busypf_tail->next=freepf_head;
-				busypf_tail=freepf_head;
-				busypf_tail->next=NULL;
-			}
-			freepf_head=p;
-		}
-	}
-	printf("%d frames %f\n",pf,1-(float)diseffect/320);
 }
+
+pfc[pf-1].pfn=pf-1;
+
+pfc[pf-1].next=NULL;
+
+freepf_head=&pfc[0];
+
+}
+
+void lru(int pf)
+
+{
+
+int i,j,diseffect=0; /*diseffectç”¨æ¥è®°å½•é¡µé¢å¤±æ•ˆæ¬¡æ•°*/
+
+int mintime,minj,present_time; /*present_timeç”¨äºè®¡æ—¶*/
+
+for(i=0;i<320;i++) /*å¤„ç†é¡µé¢è®¿é—®åºåˆ—ï¼Œè®¡ç®—å¤±æ•ˆæ•°*/
+
+{
+
+if(pl[s[i]].pfn==-1) /*è¢«è®¿é—®é¡µé¢ä¸åœ¨å†…å­˜ä¸­ï¼Œå¤±æ•ˆæ•°åŠ 1å¹¶å°†å…¶è°ƒå…¥å†…å­˜*/
+
+{
+
+diseffect+=1;
+
+if(freepf_head==NULL) /*æ— ç©ºé—²å¸§ï¼Œåˆ™æ‰¾å‡ºè·ç°åœ¨æœ€ä¹…çš„è¢«è®¿é—®é¡µï¼Œå¹¶å°†æ·˜æ±°ï¼Œå°†å…¶å ç”¨çš„å¸§åŠ å…¥ç©ºé—²å¸§é˜Ÿåˆ—*/
+
+{
+
+mintime=32767;
+
+for(j=0;j<32;j++)
+
+{
+
+if(mintime>pl[j].time&&pl[j].pfn!=-1)
+
+{
+
+mintime=pl[j].time;
+
+minj=j;
+
+}
+
+}
+
+freepf_head=&pfc[pl[minj].pfn];
+
+pl[minj].pfn=-1;
+
+pl[minj].time=-1;
+
+freepf_head->next=NULL;
+
+}
+
+pl[s[i]].pfn=freepf_head->pfn; /*ä¸ºå¾…è°ƒå…¥é¡µé¢åˆ†é…ä¸€å¸§ï¼Œå¹¶è®°å½•ä¸‹è®¿é—®æ—¶é—´*/
+
+pl[s[i]].time=present_time;
+
+freepf_head=freepf_head->next;
+
+}
+
+else
+
+pl[s[i]].time=present_time; /*è‹¥è¢«è®¿é¡µé¢åœ¨å†…å­˜ä¸­åˆ™æ›´æ–°è®¿é—®æ—¶é—´*/
+
+present_time++; /*æ¯å¤„ç†é¡µé¢è®¿é—®åºåˆ—ä¸­çš„ä¸€é¡¹ï¼Œè®¡æ—¶å™¨åŠ 1*/
+
+}
+
+printf("%d frames %f\n",pf,1-(float)diseffect/320);
+
+}
+â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”
+
+                            ç‰ˆæƒå£°æ˜ï¼šæœ¬æ–‡ä¸ºåšä¸»åŸåˆ›æ–‡ç« ï¼Œéµå¾ª CC 4.0 BY-SA ç‰ˆæƒåè®®ï¼Œè½¬è½½è¯·é™„ä¸ŠåŸæ–‡å‡ºå¤„é“¾æ¥å’Œæœ¬å£°æ˜ã€‚
+                        
+åŸæ–‡é“¾æ¥ï¼šhttps://blog.csdn.net/weixin_60732009/article/details/134251993
